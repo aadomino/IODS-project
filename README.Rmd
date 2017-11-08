@@ -1,0 +1,14 @@
+---
+title: "IODS course project"
+author: "Agata Dominowska"
+date: "8 November 2017"
+output: html_document
+---
+
+##Some info about the course##  
+
+*During the course, we will learn R, RStudio and GitHub.*
+
+This is my IODS project: 
+
+https://aadomino.github.io/IODS-project/
