@@ -9,6 +9,6 @@ output: html_document
 
 *During the course, we will learn R, RStudio and GitHub.*
 
-This is my IODS project: 
+This is my IODS project diary: 
 
 https://aadomino.github.io/IODS-project/
