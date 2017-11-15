@@ -10,7 +10,7 @@ You can find the pre-processed data here: [GitHub data repository.](https://gith
 The dataset, *learning2014*, consists of 166 observations and 7 variables - these are the dimensions of the data. You can see it here:
 
 ```{r}
-learning2014 <- read.table("learning2014.csv", header = TRUE, sep = "\t")
+learning2014 <- read.table("C:/Users/P8Z77-V/Documents/learning2014.csv", header = TRUE, sep = "\t")
 dim(learning2014)
 ```
 
@@ -27,7 +27,7 @@ These variables are used to categorise the answers of students from the survey. 
 The dataset does not contain the students who received 0 points from the final exam. These results have been filtered out: 
 
 ```{r}
-learning2014 <- filter(learning2014, Points > 0)
+learning2014 <- dplyr::filter(learning2014, points > 0)
 ```
 
 ## 2. Taking a more detailed look at the data
@@ -109,7 +109,7 @@ The multiple R-squared is higher in the first model, even though the explanatory
 ```{r}
 # Diagnostic plots using the plot() function. Choose the plots 1, 2 and 5.
 par(mfrow = c(2,2))
-plot(points_model, which = c(1,2,5))
+plot(m1, which = c(1,2,5))
 ```
 
 
