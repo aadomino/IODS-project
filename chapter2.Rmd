@@ -40,7 +40,7 @@ The summary of the data includes a lot of information on all the variables. Ther
 summary(learning2014)
 ```
 
-An overview of this dataset produces a few interesting observations. We can clearly see that there are more female respondents than male ones, and the age variable represents typical age distribution of university students. Most of them are in their twenties, with a few outliers with the ages from 17 to 55. The attitude variable shows that the survey participants approach statistics with a slightly more positive than negative attitude. Deep learning is favoured more than strategic or surface learning (deep, stra and surf variables). The final exam results range from 7 to 33.
+An overview of this dataset produces a few interesting observations. We can clearly see that there are more female respondents than male ones, and the *age* variable represents typical age distribution of university students. Most of them are in their twenties, with a few outliers with the ages from 17 to 55. The *attitude* variable shows that the survey participants approach statistics with a slightly more positive than negative attitude. Deep learning is favoured more than strategic or surface learning (deep, stra and surf variables). The final exam results range from 7 to 33.
 
 #### A graphical overview
 
@@ -73,7 +73,7 @@ p1
 ## 3. Choosing and fitting a regression model
 
 In this part we will choose and fit a suitable regression model, which will explain the data in more detail - we want to find out which factors influence the amount of exam points received.
-*Points* is the target (dependent) variable. The previous section shows that *attitude*, *stra* and *surf* correlate most strongly with *points*. They will be our explanatory variables in this model, whose summary is printed out below:
+*Points* is the target (dependent) variable. The previous section shows that *attitude*, *stra* and *surf* correlate most strongly with *points*. They will be our explanatory variables in this model, the summary of which is printed out below:
 
 ```{r}
 # Fit a regression model (m0) with multiple explanatory variables: attitude, stra, surf. Print a summary of the model.
@@ -87,7 +87,7 @@ Residuals are assumed to be normally distributed with zero mean and constant var
 
 Coefficients show estimated influence of the explanatory variables on the target variable - the logistic probability of the outcome for a change by one unit in explanatory variable. In other words, here, if attitude increases by 1, the logistic odds of better test points increase by 0.33952. The more excited the students are about the subject, the better chances they have to pass the final with flying colours. 
 
-The summary also shows standard error, t- and p-values and indicates the significance values. The effect of attitude on the dependent variable (exam points) is statistically significant, while stra and surf are not (p value over .5) If an explanatory variable in the model does not have a statistically significant relationship with the target variable, we remove the variable from the model and fit the model again without it. In this summary, the residuals' median has decreased and attitude is highly statistically significant.
+The summary also shows standard error, t- and p-values and indicates the significance values. The effect of *attitude* on the dependent variable (exam points) is statistically significant, while *stra* and *surf* are not (p value over .5) If an explanatory variable in the model does not have a statistically significant relationship with the target variable, we remove the variable from the model and fit the model again without it. In this summary, the residuals' median has decreased and attitude is highly statistically significant.
 
 ```{r}
 # Create a regression model m1 with only attitude. Print a summary of the model.
@@ -105,18 +105,35 @@ The multiple R-squared is higher in the first model, even though the explanatory
 
 ## 5. Creating diagnostic plots
 
+Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage:
 
 ```{r}
 # Diagnostic plots using the plot() function. Choose the plots 1, 2 and 5.
-par(mfrow = c(2,2))
+par(mfrow = c(1,1))
 plot(m1, which = c(1,2,5))
 ```
 
+These plots allow us to assess if some of the assumptions we made about our linear regression model are correct. 
 
+The first plot, residuals vs fits, is a scatter plot of residuals on the y axis and fitted values (estimated responses) on the x axis. The plot is used to detect non-linearity, unequal error variances, and outliers - as simply explained [here.](https://onlinecourses.science.psu.edu/stat501/node/36)
 
+Our plot seems to show that residuals and the fitted values are uncorrelated, just as they should be in a  linear model with normally distributed errors and constant variance. In other words, the scatter plot confirms our assumption about the error distribution and variance. Great.
 
+The second plot is a Q-Q plot (quantile-quantile plot), which is used to assess if the target variable we took from our dataset really has the distribution we assumed in our model, which, for us, is a normal distribution. (A great source on interpreting this kind of plots can be found [here](http://data.library.virginia.edu/understanding-q-q-plots/)).
 
+> A Q-Q plot is a scatterplot created by plotting two sets of quantiles against one another. If both sets of quantiles came from the same distribution, we should see the points forming a line that’s roughly straight.
 
+Our plot indeed forms a straight line. Assumption confirmed.
+
+The third plot, Residuals vs Leverage, allows us to see if the extreme values in the data influence the regression line, i.e. if the fact that we include them in our dataset influences the overall results.
+
+The patterns in this plot are not really relevant. There are 2 things to look for: 
++ outlying values at the upper right corner or at the lower right corner - values far away from the rest of the data points,
++ cases outside of the dashed red line (Cook’s distance).
+
+In our plot, we have no influential cases. The Cook's distance lines are not even visible, which means that all our data fits well within the lines. There are no extreme values. The plot is actually typical for the datasets with no influential cases. 
+
+Finally, some more reading I enjoyed on the subject of [diagnostic plots.](http://data.library.virginia.edu/diagnostic-plots/)
 
 
 
