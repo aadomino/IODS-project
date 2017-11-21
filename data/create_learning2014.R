@@ -4,7 +4,7 @@
 
 ### Data wrangling
 
-## 1.Create a folder named ‘data’ in your IODS-project folde, create a new  R script with RStudio. Write your name, date and a one sentence file description as a comment on the top of the script file. Save the script for example as 'create_learning2014.R' in the ‘data’ folder. - Done! 
+## 1.Create a folder named â€˜dataâ€™ in your IODS-project folde, create a new  R script with RStudio. Write your name, date and a one sentence file description as a comment on the top of the script file. Save the script for example as 'create_learning2014.R' in the â€˜dataâ€™ folder. - Done! 
 
 ## 2. Read the full learning2014 data from the given URL into R and explore the structure and dimensions of the data.
 
@@ -66,9 +66,9 @@ str(learning2014)
 getwd()
 
 #...and change it to the project folder.
-setwd("C:\Users\P8Z77-V\Documents\GitHub\IODS-project\data")
+setwd("C:\Users\myProfile\Documents\GitHub\IODS-project\data")
 
-# Save the analysis dataset to the ‘data’ folder, using write.table() function. 
+# Save the analysis dataset to the â€˜dataâ€™ folder, using write.table() function. 
 # You can name the data set for example as learning2014(.txt or .csv). See ?write.csv for help or search the web for pointers and examples. 
 write.table(learning2014, file = "learning2014.csv", sep = "\t", col.names = TRUE)
 
