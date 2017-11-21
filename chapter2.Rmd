@@ -128,8 +128,8 @@ Our plot indeed forms a straight line. Assumption confirmed.
 The third plot, Residuals vs Leverage, allows us to see if the extreme values in the data influence the regression line, i.e. if the fact that we include them in our dataset influences the overall results.
 
 The patterns in this plot are not really relevant. There are 2 things to look for: 
-+ outlying values at the upper right corner or at the lower right corner - values far away from the rest of the data points,
-+ cases outside of the dashed red line (Cook’s distance).
+  + outlying values at the upper right corner or at the lower right corner - values far away from the rest of the data points,
+  + cases outside of the dashed red line (Cook’s distance).
 
 In our plot, we have no influential cases. The Cook's distance lines are not even visible, which means that all our data fits well within the lines. There are no extreme values. The plot is actually typical for the datasets with no influential cases. 
 
