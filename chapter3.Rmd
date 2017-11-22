@@ -17,7 +17,7 @@ The data comes from The Machine Learning Repository at UCI.
 The source data was merged; the variables not used for joining the two data have been combined by averaging (including the grade variables). Two new variables were included: *alc_use*, the average of 'Dalc' and 'Walc' (which describe alcohol use on weekdays and on weekends, respectively); and *high_use*, which is TRUE if *alc_use* is higher than 2 and FALSE if it is not.
 
 ```{r}
-alc <- read.table("C:\\Users\\P8Z77-V\\Documents\\GitHub\\IODS-project\\data\\alc.csv", header = TRUE, sep = ";")
+alc <- read.table("C:\\Users\\MyProfile\\Documents\\GitHub\\IODS-project\\data\\alc.csv", header = TRUE, sep = ";")
 str(alc)
 
 ```
@@ -152,14 +152,49 @@ cbind(OR1, CI1)
 ```
 
 I had to remind this to myself:
-> An odds ratio (OR) is a measure of association between an exposure and an outcome. The OR represents the odds that an outcome will occur given a particular exposure, compared to the odds of the outcome occurring in the absence of that exposure. - [source](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2938757/)
+>An odds ratio (OR) is a measure of association between an exposure and an outcome. The OR represents the odds that an outcome will occur given a particular exposure, compared to the odds of the outcome occurring in the absence of that exposure. - [source](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2938757/)
 
 So, in this case, the odds ratio for variable sexM means the odds of a male using alcohol heavily to the odds of a female using alcohol heavily. The odd ratio is ca. 2.32 - this means that in our data, a boy is 2.32 times more likely to drink alcohol in huge amounts than a girl.
 
 All OR results are more than 1, which means a positive correlation with *high_use* for all the variables that were chosen at the beginning.
 
 
+## 4. Predictions
+Here, using the variables which, according to the logistic regression model above, had a statistical relationship with high/low alcohol consumption, we will explore the predictive power of the model. Only sex and absences had a high statistical significance, so let's keep these.
 
+```{r}
+m1 <- glm(high_use ~ sex + absences, data = alc, family = "binomial")
+summary(m1)
+```
 
+Below is a table of predictions compared to the actual values of the variable *high_use* in our new model. Two columns are added: *probability* including the predicted probabilities and *prediction*, which has value TRUE if the value of "probability" is larger than 0.5. 
 
+```{r}
+probabilities <- predict(m1, type = "response")
+
+# Add the predicted probabilities to 'alc'.
+alc <- mutate(alc, probability = probabilities)
+
+# Use the probabilities to make a prediction of high_use.
+alc <- mutate(alc, prediction = probability>0.5)
+
+# Tabulate the target variable versus the predictions.
+table(high_use = alc$high_use, prediction = alc$prediction)
+```
+
+The model is accurate in (258 + 26) cases. However, it predicted the respondent to be a heavy drinker in 10 cases, when in fact the user was not, and predicted them NOT to be a heavy drinker when they were as much as 88 times.
+
+So, what is the error in the prediction?
+
+```{r}
+# define a loss function (mean prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# call loss_func to compute the average number of wrong predictions in the (training) data
+loss_func(class = alc$high_use, prob = alc$probability)
+```
+The training error seems to be ca. 25%. 
 

@@ -152,6 +152,7 @@ $(document).ready(function () {
 <li><a href="#accessing-the-data-and-making-hypotheses">1. Accessing the data and making hypotheses</a></li>
 <li><a href="#exploring-the-data">2. Exploring the data</a></li>
 <li><a href="#logistic-regression-1">3. Logistic regression</a></li>
+<li><a href="#predictions">4. Predictions</a></li>
 </ul></li>
 </ul>
 </div>
@@ -547,9 +548,66 @@ cbind(OR1, CI1)</code></pre>
 ## absences    1.09922964 1.05343261 1.1522505
 ## failures    1.53731413 1.05427814 2.2602725
 ## freetime    1.31591429 1.03172262 1.6889201</code></pre>
-<p>I had to remind this to myself: &gt; An odds ratio (OR) is a measure of association between an exposure and an outcome. The OR represents the odds that an outcome will occur given a particular exposure, compared to the odds of the outcome occurring in the absence of that exposure. - <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2938757/">source</a></p>
+<p>I had to remind this to myself: &gt;An odds ratio (OR) is a measure of association between an exposure and an outcome. The OR represents the odds that an outcome will occur given a particular exposure, compared to the odds of the outcome occurring in the absence of that exposure. - <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2938757/">source</a></p>
 <p>So, in this case, the odds ratio for variable sexM means the odds of a male using alcohol heavily to the odds of a female using alcohol heavily. The odd ratio is ca. 2.32 - this means that in our data, a boy is 2.32 times more likely to drink alcohol in huge amounts than a girl.</p>
 <p>All OR results are more than 1, which means a positive correlation with <em>high_use</em> for all the variables that were chosen at the beginning.</p>
+</div>
+<div id="predictions" class="section level2">
+<h2>4. Predictions</h2>
+<p>Here, using the variables which, according to the logistic regression model above, had a statistical relationship with high/low alcohol consumption, we will explore the predictive power of the model. Only sex and absences had a high statistical significance, so let’s keep these.</p>
+<pre class="r"><code>m1 &lt;- glm(high_use ~ sex + absences, data = alc, family = &quot;binomial&quot;)
+summary(m1)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = high_use ~ sex + absences, family = &quot;binomial&quot;, 
+##     data = alc)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.2753  -0.8753  -0.6081   1.0921   1.9920  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -1.83606    0.22251  -8.252  &lt; 2e-16 ***
+## sexM         0.97762    0.23982   4.076 4.57e-05 ***
+## absences     0.09659    0.02306   4.189 2.80e-05 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 465.68  on 381  degrees of freedom
+## Residual deviance: 430.07  on 379  degrees of freedom
+## AIC: 436.07
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<p>Below is a table of predictions compared to the actual values of the variable <em>high_use</em> in our new model. Two columns are added: <em>probability</em> including the predicted probabilities and <em>prediction</em>, which has value TRUE if the value of “probability” is larger than 0.5.</p>
+<pre class="r"><code>probabilities &lt;- predict(m1, type = &quot;response&quot;)
+
+# Add the predicted probabilities to 'alc'.
+alc &lt;- mutate(alc, probability = probabilities)
+
+# Use the probabilities to make a prediction of high_use.
+alc &lt;- mutate(alc, prediction = probability&gt;0.5)
+
+# Tabulate the target variable versus the predictions.
+table(high_use = alc$high_use, prediction = alc$prediction)</code></pre>
+<pre><code>##         prediction
+## high_use FALSE TRUE
+##    FALSE   258   10
+##    TRUE     88   26</code></pre>
+<p>The model is accurate in (258 + 26) cases. However, it predicted the respondent to be a heavy drinker in 10 cases, when in fact the user was not, and predicted them NOT to be a heavy drinker when they were as much as 88 times.</p>
+<p>So, what is the error in the prediction?</p>
+<pre class="r"><code># define a loss function (mean prediction error)
+loss_func &lt;- function(class, prob) {
+  n_wrong &lt;- abs(class - prob) &gt; 0.5
+  mean(n_wrong)
+}
+
+# call loss_func to compute the average number of wrong predictions in the (training) data
+loss_func(class = alc$high_use, prob = alc$probability)</code></pre>
+<pre><code>## [1] 0.2565445</code></pre>
+<p>The training error seems to be ca. 25%.</p>
 <hr />
 </div>
 </div>
