@@ -1,0 +1,165 @@
+---
+title: "Chapter 3"
+author: "Agata Dominowska"
+date: "22 November 2017"
+output: html_document
+---
+
+# Logistic regression
+*The objective of this week was learning how to join together data from different sources for further analysis and analysing the results of logistic regression. This part includes code, intrepretations and explanations of the results. Definitely wasn't easy-peasy.*
+
+## 1. Accessing the data and making hypotheses
+Under these links my [processed data in the .csv format](https://github.com/aadomino/IODS-project/blob/master/data/alc.csv) and the [script used to process the data](https://github.com/aadomino/IODS-project/blob/master/data/create_alc.R) can be found.
+
+The data comes from The Machine Learning Repository at UCI.  
+> This data approach student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features and it was collected by using school reports and questionnaires. Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese (por). -[source](https://archive.ics.uci.edu/ml/datasets/Student+Performance)
+
+The source data was merged; the variables not used for joining the two data have been combined by averaging (including the grade variables). Two new variables were included: *alc_use*, the average of 'Dalc' and 'Walc' (which describe alcohol use on weekdays and on weekends, respectively); and *high_use*, which is TRUE if *alc_use* is higher than 2 and FALSE if it is not.
+
+```{r}
+alc <- read.table("C:\\Users\\P8Z77-V\\Documents\\GitHub\\IODS-project\\data\\alc.csv", header = TRUE, sep = ";")
+str(alc)
+
+```
+
+The data includes 382 observations and 35 variables. The attributes have to do with the students' background, learning outcomes, family, health, and free time activities. 
+
+It is reasonable to assume that some variables are positively correlated with some others. Judging by the DataCamp exercises completed earlier, *sex*, *absences* and *failures* should be correlated with alcohol consumption. I have also chosen *freetime* as a variable with potential to correlate with it - if the students have more free time, they are more likely to consume alcohol. Even though they shouldn't and they know it.
+
+So, the hypotheses - each of them assuming positive correlation - are the following:
+
+* Male students likely consume more alcohol than female students.
+* Students who drink more are likely to see their attendance levels decrease.
+* Students who drink more likely have a worse performance, i.e. fail more often.
+* Those students who have more free time are likely to occupy themselves with drinking.
+
+## 2. Exploring the data
+In this part, let's numerically and graphically explore the distributions of the chosen variables and their relationships with alcohol consumption, and see if our hypotheses hold up.
+
+First, let's access the libraries needed in this part.
+
+```{r}
+# Access the libraries needed in this section.
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(boot)
+```
+
+Next, it's good to have a good look at all the variables in a graphical form. This way it is easier to see the tendencies and the distribution of data.
+
+### Bar plots
+The bar plots show that the distribution of males and females is very balanced, with slightly fewer male students. 
+
+Most of the students haven't failed their classes, but there are some who have had one or more failures. 
+
+Free time is interestingly distributed: the students had to assess the amount of free time on a scale 1-5. Most of them said they have an average amount of free time, but there were more of those who said that they had quite a lot or very much of it. 
+
+The majority of students have less than 10 absences, but there are some outliers.
+
+```{r}
+# The chosen variables: sex, failures, free time and absences.
+ggplot(data = alc, aes(x = sex)) + geom_bar()
+ggplot(data = alc, aes(x = failures)) + geom_bar()
+ggplot(data = alc, aes(x = freetime)) + geom_bar()
+ggplot(data = alc, aes(x = absences)) + geom_bar()
+```
+
+Alcohol consumption is generally low. The students who have admitted using a lot of alcohol constitute less than 1/3 of all students.
+
+```{r}
+# Alcohol use and hign use.
+ggplot(data = alc, aes(x = alc_use)) + geom_bar()
+ggplot(data = alc, aes(x = high_use)) + geom_bar()
+```
+
+What if we combine some of the variables? Let's see if we can get an idea about some of the assumptions made earlier.
+
+The relation of hing alcohol use with gender seems to confirm the hypothesis - there are more males who are heavy drinkers than females.
+
+```{r}
+g0 <- ggplot(data = alc, aes(x = high_use))
+g0 + geom_bar() + facet_wrap("sex")
+```
+
+What about failures? The numbers are low, so it is difficult to assess from the bar plots, but it seems that at least for the group of students with the highest number of failures, the number of heavy drinkers surpasses the number of those who are not. Heavy drinking is a more prominent factor in groups with 1 or 2 failures than it is in the group with 0 failures.
+
+```{r}
+g1 <- ggplot(data = alc, aes(x = high_use))
+g1 + geom_bar() + facet_wrap("failures")
+```
+
+### Box plots
+In the following plots, *high_use* is the target variable. For the colour visualisation, *sex* is used, and *absences*, *failures* and *freetime* are the explanatory variables.
+
+```{r}
+g2 <- ggplot(alc, aes(x = high_use, col = sex, y = absences))
+g2 + geom_boxplot() + ylab("absences")
+
+g3 <- ggplot(alc, aes(x = high_use, col = sex, y = failures))
+g3 + geom_boxplot() + ylab("failures")
+
+g4 <- ggplot(alc, aes(x = high_use, col = sex, y = freetime))
+g4 + geom_boxplot() + ylab("free time")
+
+```
+
+This visualisation also seems to confirm the first hypothesis - high alcohol consumption is more likely associated with male sex. 
+
+### Cross-tabulations
+Cross tabulation lets us compare the relationship between any two variables.
+
+Here, *alc_use* is the variable of interest. The other variables taken into account show definitely an upward tendency. This is consistent with our hypotheses.
+
+```{r}
+alc %>% group_by(alc_use, sex) %>% summarise(count = n(), mean_absences = mean(absences), mean_failures = mean(failures), mean_freetime = mean(freetime))
+```
+
+If *high_use* is the variable of interest, the tendency is also pronounced. Especially the hypothesis of heavy drinking correlating with absences stands out.
+
+```{r}
+alc %>% group_by(high_use, sex) %>% summarise(count = n(), mean_absences = mean(absences), mean_failures = mean(failures), mean_freetime = mean(freetime))
+```
+
+## 3. Logistic regression
+In this part, we use logistic regression to statistically explore the relationship between the chosen variables and the binary high/low alcohol consumption variable as the target variable. 
+
+```{r}
+# Find the model with glm()
+m0 <- glm(high_use ~ sex + absences + failures + freetime, data = alc, family = "binomial")
+```
+
+```{r}
+# Present a summary of the fitted model.
+summary(m0)
+```
+
+The results here are quite consistent with the previous observations. 
+
+The correlation between male sex and high alcohol consumption and then the correlation between absences and high alcohol consumption are very higly significant. By contrast, failures and free time are not.
+
+Finally, it is time to present and interpret the coefficients of the model as odds ratios and deliver confidence intervals for them. Interpret the results and compare them to your previously stated hypothesis.
+
+```{r}
+# Compute odds ratios (OR).
+OR1 <- coef(m0) %>% exp
+
+# Compute confidence intervals (CI).
+CI1 <- confint(m0) %>% exp
+
+# Print the odds ratios along with their confidence intervals.
+cbind(OR1, CI1)
+```
+
+I had to remind this to myself:
+> An odds ratio (OR) is a measure of association between an exposure and an outcome. The OR represents the odds that an outcome will occur given a particular exposure, compared to the odds of the outcome occurring in the absence of that exposure. - [source](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2938757/)
+
+So, in this case, the odds ratio for variable sexM means the odds of a male using alcohol heavily to the odds of a female using alcohol heavily. The odd ratio is ca. 2.32 - this means that in our data, a boy is 2.32 times more likely to drink alcohol in huge amounts than a girl.
+
+All OR results are more than 1, which means a positive correlation with *high_use* for all the variables that were chosen at the beginning.
+
+
+
+
+
+
