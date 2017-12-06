@@ -17,7 +17,7 @@ The data comes from The Machine Learning Repository at UCI.
 The source data was merged; the variables not used for joining the two data have been combined by averaging (including the grade variables). Two new variables were included: *alc_use*, the average of 'Dalc' and 'Walc' (which describe alcohol use on weekdays and on weekends, respectively); and *high_use*, which is TRUE if *alc_use* is higher than 2 and FALSE if it is not.
 
 ```{r}
-alc <- read.table("C:\\Users\\MyProfile\\Documents\\GitHub\\IODS-project\\data\\alc.csv", header = TRUE, sep = ";")
+alc <- read.table("C:\\Users\\P8Z77-V\\Documents\\GitHub\\IODS-project\\data\\alc.csv", header = TRUE, sep = ";")
 str(alc)
 
 ```
