@@ -83,10 +83,10 @@ dim(human)
 # 1. Transform gni to numeric:
 
 # Look at the structure of the GNI column in 'human'
-str(human$gni)
+str(human$GNI)
 
 # Make it numeric by removing the commas from GNI and using the pipe operator for printing a numeric version of the 
-str_replace(human$gni, pattern=",", replace ="") %>% as.numeric(human$gni)
+str_replace(human$GNI, pattern=",", replace ="") %>% as.numeric(human$gni)
 
 # 2. Exclude unnecessary variables and choose columns to keep:
 keep <- c("Country", "Edu2.FM", "Labo.FM", "Life.Exp", "Edu.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F")
