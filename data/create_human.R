@@ -58,7 +58,7 @@ gii$Labo.FM <- Labo.FM
 
 # Join the two data sets by country.
 
-human <- inner_join(hd, gii, by = "Country")
+human <- inner_join(hd, gii, by = c("Country"))
 
 # Look at the joined data.
 
@@ -85,22 +85,23 @@ dim(human)
 # Look at the structure of the GNI column in 'human'
 str(human$GNI)
 
-# Make it numeric by removing the commas from GNI and using the pipe operator for printing a numeric version of the 
-str_replace(human$GNI, pattern=",", replace ="") %>% as.numeric(human$gni)
+# Make it numeric by removing the commas from GNI and using the pipe operator as.numeric
+str_replace(human$GNI, pattern=",", replace ="") %>% as.numeric(human$GNI)
+human$GNI <- as.numeric(human$GNI)
 
 # 2. Exclude unnecessary variables and choose columns to keep:
 keep <- c("Country", "Edu2.FM", "Labo.FM", "Life.Exp", "Edu.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F")
-human <- select(human, one_of(keep))
+human <- dplyr::select(human, one_of(keep))
 
 # There should be 195 observations & 9 variables, and yes there are.
 glimpse(human)
 
 # 3. Remove missing values:
 
-# Print out the data along with a completeness indicator as the last column:
+# Print out the dataframe along with a completeness indicator as the last column:
 data.frame(human[-1], comp = complete.cases(human))
 
-# Filter out all rows with NA values:
+# Filter out all rows with NA (not available, i.e. nonexistent) values:
 human_ <- filter(human, complete.cases(human))
 
 # There are now 162 observations & 9 variables in our data: 
@@ -108,7 +109,7 @@ glimpse(human_)
 
 # 4. Remove observations that are related to regions instead of countries:
 
-# The variable "Country" includes also regions, which are the last 7 observations
+# "Country" includes regions, which are the last 7 observations
 human_$Country
 
 # Define the last indice we want to keep:
@@ -121,14 +122,11 @@ human_ <- human_[1:last, ]
 human_$Country
 glimpse(human_)
 
-# Save the data set:
-write.table(human_, file = "human.csv", sep = ",", col.names = TRUE)
-
 # 5. Finishing touches: define country names as row names and remove the country name columm before saving the data
 
 # Define countries as rownames and remove the Country variable
 rownames(human_) <- human_$Country
-human_ <- select(human_, -Country)
+human_ <- dplyr::select(human_, -Country)
 
 # The data should now have 155 observations and 8 variables. It does.
 glimpse(human_)
@@ -139,7 +137,5 @@ glimpse(human_)
 write.table(human_, file = "human.csv", sep = ",", col.names = TRUE, row.names = TRUE )
 
 glimpse(human_)
-
-# Everything seems to be okay.
 
 
