@@ -8,112 +8,141 @@ output: html_document
 *The objective of this week was to learn the basics of two data science based ways of reducing the dimensions, PCA and MCA. *
 
 ## 1. Reading and exploring the data
-The original data, coming from the United Nations Development Programme, is composed of 2 data sets measuring human development and gender inequality for a set of countries. The data used in this part has been modified, however.
+*Task 1 and 2*
+The original data, coming from the United Nations Development Programme, is composed of 2 data sets measuring human development and gender inequality for a set of countries (to be more precise, [Human Development Index (HDI)]( http://hdr.undp.org/en/composite/HDI) and [Gender Inequality Index (GII)](http://hdr.undp.org/en/composite/GII)). It is quite recent, as most of it comes from year 2015. 
+The data used in this part has been modified on the basis of the original data, however.
 
 Under these links my [processed data in the .csv format](https://github.com/aadomino/IODS-project/blob/master/data/human.csv) and the [script used to process the data](https://github.com/aadomino/IODS-project/blob/master/data/create_human.R) can be found.
 
-The data includes 8 variables of human development and inequality and only for those countries that did not have any missing values for these indicators. I start by reading the data and examining its structure and dimensions.
-
 ```{r}
-human <- read.csv(file = "C:\\Users\\P8Z77-V\\Documents\\GitHub\\IODS-project\\data\\human.csv", row.names = 1)
+human <- read.csv(file = "C:\\Users\\P8Z77-V\\Documents\\GitHub\\IODS-project\\data\\human.csv", sep = ",", header = TRUE)
 str(human)
 dim(human)
 ```
 
-We can see that there are 155 observations, i.e. countries, in the data. The 8 variables measure
+The data includes 8 variables (*Edu2.FM*, *Labo.FM*, *Life.Exp*, *Edu.Exp*, *GNI*, *Mat.Mor*, *Ado.Birth*, *Parli.F*) of human development and inequality for the 155 countries (*Country* column) that had the complete data. Each row is represented by data from a different country. These variables tell about the following phenomena, respectively:
 
-* % of women with at least secondary education (f2edu)
-* % of women in labour force (flabour)
-* Expected years of schooling (expedu)
-* Life expectance at birth (le)
-* GNI (gross national income) per capita (gni)
-* Maternal mortality ratio (matmort)
-* Adolescent birth rate (adolbirthrate)
-* Female share of parliamentary seats (parliament)
+* The percentage of women with at least secondary education 
+* The percentage of women participating in labour force 
+* Life expectance at birth 
+* Expected years of schooling 
+* GNI (gross national income) per capita 
+* Maternal mortality ratio 
+* Adolescent birth rate 
+* Female share of parliamentary seats 
 
-I continue by examining the distributions of the variables and their relationships with each other.
+The summary of the data shows the distributions and relations of the observations - we can observe e.g. the minimum, maximum, median and mean values of the variables:
 
 ```{r}
 summary(human)
 ```
 
+The striking impression about this overview is that there is a lot of variation between the countries, which is shown by the min and max values for the variables in the data. For example, the presence of women in the parilament ranges from 0 to 57.5%, the maternal mortality from 1 to 1100 (per 100 000 births), lthe proportion of women with a least secondary education ranges from 0.9% to 100%. 
+
+The more detailed look at the data with ggpairs function:
+
 ```{r}
+# Access GGally
 library(GGally)
+
+# Visualize the 'human' variables
 ggpairs(human)
 ```
 
-If we look at the summary table, we can see that all variables vary strongly between the coutries. For instance, the proportion of women with a least secondary education ranges from 0.9% to 100% and female parliamentary representation from 0% to 57.5%. Some of the varibles have quite strong correlations with each other. For example, life expectancy is strongly associated with higher expected years of education and lower adolescent birth rate. On the other hand, female parliamentary representation does not show strong correlation with any of the other variables. Expected years of education is the only variable with somewhat normal distribution. For maternal mortality, there are a few countries with very high ratios but most countries fall to the lower end of the distribution.
-
-## Principal component analysis (PCA)
-
-Next, I will perform a principal component analysis on the data described above. I plot the results with a biplot that shows two of the most important principal components that were identified as x-axis and y-axis. 
+And a clearer look into the most prominent correlations with the correlation matrix visualisation (correlation plot):
 
 ```{r}
-#The model
+# Calculate the correlation matrix and round it to include just 2 digits
+cor_matrix<-cor(human) %>% round(digits=2)
+ 
+# Visualize the correlation matrix with a correlations plot
+corrplot(cor_matrix, method="circle", type = "upper", cl.pos = "b", tl.pos = "d", tl.cex = 0.6)
+```
+
+Some of the varibles have quite strong correlations with each other. For example, secondary education correlates positively with life expectancy and (quite understandably) with more years of schooling; it is however negatively correlated with adolescent births and maternal deaths. Life expectancy and expected length of education also correlate positively between themselves, and so do maternal mortality with adolescent births; these also are connected with, respectively, the high or low standard of living in a given country - GDI is correlated  slightly negatively with both maternal deaths and adolescent births. It seems that a bad situation of women in a country correlates with other negative issues.
+
+
+##2. Principal component analysis (PCA)
+*Tasks 3, 4 and 5*
+
+The next step is to perform principal component analysis (PCA) using the singular value decomposition (SVD) on the not standardized human data and show the variability captured by the principal components. Then, we will draw a biplot displaying the observations by the first two principal components (PC1 coordinate in x-axis, PC2 coordinate in y-axis), along with arrows representing the original variables.  
+
+```{r}
 pca_human <- prcomp(human)
 summary(pca_human)
 
-biplot(pca_human, choices = 1:2, cex = c(0.5, 0.8), col = c("grey40", "deeppink2"))
+biplot(pca_human, choices = 1:2, cex = c(0.5, 0.8), col = c("grey40", "deeppink2"), main = "Biplot, unscaled human data")
 ```
 
-The plot is quite difficult to read as most countries fall to the top right corner of it. Because we have not standardized the variables, gross national income (GNI) is the most significant due to its large variance. In fact, the first principal component seems to account for 100% of the variance. GNI defines the first principal component, but it is difficult to say what defines the second, as the other arrows are not drawn. Let's rerun the analysis with scaled variables.
+It is clear that standard deviations (or variablity) of the principal components are very different in magnitude. From the summary of the PCA results and the variance captured by each component it is clear that all of the variability in the original features is captured by the first principal component.PCA is a method sensitive to the relative scaling of the original features and takes features with larger variance to be more important than features with smaller variance.
+
+The biplot is not easy to read. Most data are at the top right corner of it. Since the variables have not been standardized, gross national income (GNI) is the only significant variable because of its large variance. No variablility is captyred by PC2 or others, so other relationships are not really shown and hence this plot is not very informative.
+
+Let's standardize the variables in the human data and repeat the above analysis and then see what happens.
 
 ```{r}
-#Scale
+# Scale
 human_std <- scale(human)
 
-#Estimation
+# Estimation
 pca_human <- prcomp(human_std)
-s <- summary(pca_human)
+summary(pca_human)
 
 # rounded percetanges of variance captured by each PC
-pca_pr <- round(100*s$importance[2, ], digits = 1)
+pca_pr <- round(100*pca_human$importance[2, ], digits = 1)
 
 # create object pc_lab to be used as axis labels
 pc_lab <- paste0(c("Underdevelopment", "Gender equality"), " (", pca_pr, "%)")
 
-biplot(pca_human, choices = 1:2, cex = c(0.5, 0.8), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+biplot(pca_human, choices = 1:2, cex = c(0.5, 0.8), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2], main = "Biplot, scaled human data")
 ```
 
-After scaling the variables, the plot becomes much clearer to interpret. The biplot arrows reveal that the first principal compoment measures human development or, more precisely, underdevelopment (high maternal mortality, low life expectancy, low education etc), whereas the second component measures gender equality separate of human development (female parliamentary representation and female labour market participation). It is easy to see why because when we looked at correlations, parliament and female labour were the only variables that did not have strong correlations with the other variables. I have also labeled the principal components in the plot accordingly. The proportions of variance accounted for by the components are shown in parenthesis. Human development component accounted for more than half of the variance. Because the negative values of human development component indicate high development, the Nordic countries (highly developed and high gender equality) can be found in the top-left corner of the plot. Interestingly, there are quite many underdeveloped countries with high equality and vice versa.
+After scaling the variables, it becomes visible that the values of each variable are more balanced and sort of flattened, and the second biplot is much easier to interpret: the viariability of each principal component is more evenly distrubited, yet the prominence of PC1 is still visible.
 
-## Multiple correspondence analysis
+The biplot could be interpreted as follows: the PC1 compoment reflects low human development with variables of low life expectancy, low education, high maternal mortality. The praliamentary participation, labour market participation and GNI are not correlated with the PC1, but are with PC2, the second component which seems to reflect gender equality. The second principal component is relatively less important (see the length of the arrows.)
 
-Next, I move up to multiple correspondence analysis. Here I will use a data set that contains the answers of a questionnaire on tea consumption. I start by loading the data and exploring its structure and dimensions.
+##3. Multiple correspondence analysis on FactoMineR
+*Task 6*
+
+Here, we will load the tea dataset from the package Factominer and first explore the data briefly, look at the structure and the dimensions of the data and visualize it. Then we will do Multiple Correspondence Analysis on the tea data. 
 
 ```{r}
 library(FactoMineR)
+# load data
 data("tea")
+
 str(tea)
 dim(tea)
 ```
 
-This tea consumption data set has 300 obsevations (survey participants) and 36 variables (questions). The variables include questions on backbround factors (sex, age etc), tea consumption habits (frequency, during lunch, at work etc), and tea-related notions and attitudes (healthiness, femininity, relaxation).
+This tea consumption dataset has 300 observations and 36 variables, all of which are factor or categorical variables. The variables include questions on background factors (sex, age), habits related to drinking tea (frequency, sugar, at work etc), and attitudes towards this beverage (friendliness, exciting, spirituality...).
 
-To improve the clarity of the analysis, I will only select a subset of ten variables.
+6 variables are selected for the MCA (following DataCamp):
 
 ```{r}
 # column names to keep in the dataset
-keep_columns <- c("Tea", "sex", "where", "SPC", "friends", "healthy", "sophisticated", "frequency", "breakfast", "lunch")
+keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
 
 # select the 'keep_columns' to create a new dataset
 tea_time <- dplyr::select(tea, one_of(keep_columns))
 ```
 
-Next, I will perform a multiple correspondence analysis on these ten variables.
+The MCA of the tea dataset:
 
 ```{r}
 # multiple correspondence analysis
-mca <- MCA(tea_time, graph = FALSE)
+mca <- MCA(tea_time)
 
 # summary of the model
 summary(mca)
 
 # visualize MCA
-plot(mca, invisible=c("var"), habillage = "quali")
 plot(mca, invisible=c("ind"), habillage = "quali")
 ```
+MCA can be used to detect patterns and tendencies in qualitative data (which we humanists love so much). 
 
-From the summary of the model, we can see that none of the dimensions identified account for more than 10% of the variance in the data. The first plot shows how the individuals divide on the two dimensions, while the second plot shows how the variables relate to the dimensions. We can see that most individuals fall in the middle of the plot and there are no clear outlier cases. This could be related to the fact there are no strong dimensions in the data.
+The MCA plots group the observations. The variables how and where (the purchase place and the packaging form) are close to each other and are more prominent than others. 
 
-When we look at the variable plot we can see some patterns in the data. Buying tea from tea shops, consuming green tea, consuming tea often and alone, and, interestingly, being a workman are found close to each other. On the other hand, being a student, consuming tea less frequently and considering tea unhealthy are also related as are being a senior and drinking tea in the morning. Nevertheless, there are few clearly identifiable patterns in the data when we include these ten variables.
+The last plot shows how the variables relate to the dimensions. It can be observed that the majority of individuals are found in the middle of the plot and there are no outlier cases. Buying tea from tea shops and chain stores, buying tea bags from chain stores and buying unpacked tea from tea shops are pairs that kind of go together - these are the most popular purchase patterns. Earl Grey tea is close to milk, while green tea definitely is not.
+
+
